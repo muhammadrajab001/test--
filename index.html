@@ -1,24 +1,66 @@
+
 <!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Мои задачи</title>
+    <title><?= $product['name'] ?> — купить</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div class="container">
-        <h1>📝 Мои задачи</h1>
-        
-        <form id="task-form">
-            <input type="text" id="task-input" placeholder="Введите задачу..." autocomplete="off" required>
-            <button type="submit">Добавить</button>
+    <header class="header">
+        <div class="logo">● aura.</div>
+        <nav>
+            <a href="#buy">Купить</a>
+            <a href="#reviews">Отзывы</a>
+        </nav>
+    </header>
+    <section class="product">
+        <div class="product-image">
+            <img src="<?= $product['image'] ?>" alt="<?= $product['name'] ?>">
+            <span class="badge">-<?= $discount ?>%</span>
+        </div>
+        <div class="product-info">
+            <h1><?= $product['name'] ?></h1>
+            <p class="desc"><?= $product['desc'] ?></p>
+            <ul class="features">
+                <?php foreach ($features as [$icon, $text]): ?>
+                    <li><span><?= $icon ?></span> <?= $text ?></li>
+                <?php endforeach; ?>
+            </ul>
+            <div class="price">
+                <span class="new"><?= number_format($product['price'], 0, '', ' ') ?> ₽</span>
+                <span class="old"><?= number_format($product['old'], 0, '', ' ') ?> ₽</span>
+            </div>
+            <a href="#buy" class="btn">Заказать сейчас</a>
+            <p class="delivery">🚚 Бесплатная доставка • Оплата при получении</p>
+        </div>
+    </section>
+    <section id="reviews" class="reviews">
+        <h2>Отзывы покупателей</h2>
+        <div class="review-grid">
+            <?php foreach ($reviews as [$name, $text]): ?>
+                <div class="review">
+                    <p>"<?= $text ?>"</p>
+                    <span>— <?= $name ?></span>
+                </div>
+            <?php endforeach; ?>
+        </div>
+    </section>
+    <section id="buy" class="order">
+        <h2>Оформить заказ</h2>
+        <p class="order-sub">Заполните форму — мы перезвоним в течение 15 минут.</p>
+        <form id="order-form">
+            <input type="text" name="name" placeholder="Ваше имя" required>
+            <input type="tel" name="phone" placeholder="Телефон" required>
+            <input type="text" name="address" placeholder="Адрес доставки" required>
+            <button type="submit" class="btn">Заказать за <?= number_format($product['price'], 0, '', ' ') ?> ₽</button>
         </form>
-
-        <ul id="task-list"></ul>
-        <p id="status" class="status"></p>
-    </div>
-
+        <p id="form-status" class="status"></p>
+    </section>
+    <footer class="footer">
+        <p>© <?= date('Y') ?> aura. — Все права защищены.</p>
+    </footer>
     <script src="script.js"></script>
 </body>
 </html>

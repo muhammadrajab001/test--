@@ -1,85 +1,48 @@
-const API_URL = 'api.php';
-const form = document.getElementById('task-form');
-const input = document.getElementById('task-input');
-const list = document.getElementById('task-list');
-const status = document.getElementById('status');
+const form = document.getElementById('order-form');
+const status = document.getElementById('form-status');
 
-// Загрузка задач при старте
-document.addEventListener('DOMContentLoaded', loadTasks);
-
-// Обработка формы
-form.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const text = input.value.trim();
-    if (!text) return;
-
-    await fetch(API_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'add', text })
-    });
-
-    input.value = '';
-    showStatus('Задача добавлена ✓');
-    loadTasks();
+const phoneInput = form.querySelector('input[name="phone"]');
+phoneInput.addEventListener('input', (e) => {
+    let v = e.target.value.replace(/\D/g, '').slice(0, 11);
+    if (v.startsWith('8')) v = '7' + v.slice(1);
+    if (v.startsWith('7')) {
+        v = '+7 ' + v.slice(1, 4) + (v.length > 4 ? ' ' + v.slice(4, 7) : '')
+          + (v.length > 7 ? '-' + v.slice(7, 9) : '')
+          + (v.length > 9 ? '-' + v.slice(9, 11) : '');
+    }
+    e.target.value = v;
 });
 
-// Загрузка списка
-async function loadTasks() {
+form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    status.textContent = 'Отправка...';
+    status.className = 'status';
+
+    const btn = form.querySelector('button');
+    btn.disabled = true;
+    btn.textContent = 'Обработка...';
+
     try {
-        const res = await fetch(API_URL + '?action=list');
-        const tasks = await res.json();
-        renderTasks(tasks);
+        const res = await fetch('order.php', {
+            method: 'POST',
+            body: new FormData(form)
+        });
+        const data = await res.json();
+
+        if (data.success) {
+            status.textContent = '✓ Заказ принят! Мы скоро свяжемся с вами.';
+            status.className = 'status success';
+            form.reset();
+        } else {
+            status.textContent = '✕ ' + (data.error || 'Ошибка');
+            status.className = 'status error';
+        }
     } catch (err) {
-        showStatus('Ошибка загрузки: ' + err.message);
+        status.textContent = '✕ Ошибка соединения';
+        status.className = 'status error';
     }
-}
 
-// Рендер задач
-function renderTasks(tasks) {
-    list.innerHTML = '';
-    tasks.forEach(task => {
-        const li = document.createElement('li');
-        if (task.done) li.classList.add('done');
-
-        const span = document.createElement('span');
-        span.textContent = task.text;
-        span.onclick = () => toggleTask(task.id);
-
-        const delBtn = document.createElement('button');
-        delBtn.textContent = '✕';
-        delBtn.className = 'delete-btn';
-        delBtn.onclick = () => deleteTask(task.id);
-
-        li.appendChild(span);
-        li.appendChild(delBtn);
-        list.appendChild(li);
-    });
-}
-
-// Переключить статус
-async function toggleTask(id) {
-    await fetch(API_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'toggle', id })
-    });
-    loadTasks();
-}
-
-// Удалить
-async function deleteTask(id) {
-    await fetch(API_URL, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'delete', id })
-    });
-    showStatus('Задача удалена');
-    loadTasks();
-}
-
-// Показать сообщение
-function showStatus(msg) {
-    status.textContent = msg;
-    setTimeout(() => { status.textContent = ''; }, 2000);
-}
+    btn.disabled = false;
+    btn.textContent = 'Заказать за 14 900 ₽';
+});
